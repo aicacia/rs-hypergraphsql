@@ -1,0 +1,48 @@
+[package]
+authors = ["nathanfaucett@gmail.com"]
+description = "a hypergraph in sqlite"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "hypergraphsql"
+repository = "https://github.com/aicacia/rs-hypergraphsql"
+rust-version = "1.82"
+version = "0.1.0"
+
+[lib]
+name = "hypergraphsql"
+
+[dependencies]
+serde = { version = "1.0", default-features = false, features = [
+  "std",
+  "derive",
+] }
+serde_json = { version = "1.0", default-features = false, features = ["std"] }
+chrono = { version = "0.4", default-features = false, features = ["serde"] }
+sqlx = { version = "0.8", default-features = false, features = [
+  "migrate",
+  "chrono",
+  "time",
+  "macros",
+  "sqlite",
+  "runtime-tokio",
+] }
+tokio = { version = "1.41", default-features = false, features = ["rt"] }
+log = "0.4"
+
+[features]
+default = ["std"]
+
+std = ["serde/std", "serde_json/std"]
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true

@@ -1,0 +1,6 @@
+/.vscode
+/target
+/.cargo/config.toml
+/.env
+/!.env.example
+/hypergraphsql-dev.*

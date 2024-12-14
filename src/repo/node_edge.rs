@@ -26,27 +26,27 @@ pub async fn get_related_by_node_id(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
 
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE fn.id = $1 OR tn.id = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE from_node.id = $1 OR to_node.id = $1;"#,
     node_id
   )
   .fetch_all(pool)
@@ -60,27 +60,27 @@ pub async fn get_related_by_node_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE fn.uri = $1 OR tn.uri = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE from_node.uri = $1 OR to_node.uri = $1;"#,
     node_uri
   )
   .fetch_all(pool)
@@ -94,27 +94,27 @@ pub async fn get_related_by_from_node_id(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE fn.id = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE from_node.id = $1;"#,
     from_node_id
   )
   .fetch_all(pool)
@@ -128,27 +128,27 @@ pub async fn get_related_by_from_node_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE fn.uri = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE from_node.uri = $1;"#,
     from_node_uri
   )
   .fetch_all(pool)
@@ -162,27 +162,27 @@ pub async fn get_related_by_to_node_id(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE tn.id = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE to_node.id = $1;"#,
     to_node_id
   )
   .fetch_all(pool)
@@ -196,27 +196,27 @@ pub async fn get_related_by_to_node_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE tn.uri = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE to_node.uri = $1;"#,
     to_node_uri
   )
   .fetch_all(pool)
@@ -230,27 +230,27 @@ pub async fn get_related_by_edge_id(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE e.id = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE edge.id = $1;"#,
     edge_id
   )
   .fetch_all(pool)
@@ -264,27 +264,27 @@ pub async fn get_related_by_edge_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE e.uri = $1;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE edge.uri = $1;"#,
     edge_uri
   )
   .fetch_all(pool)
@@ -299,27 +299,27 @@ pub async fn get_related_by_node_id_and_edge_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE (fn.id = $1 OR tn.id = $1) AND e.uri = $2;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE (from_node.id = $1 OR to_node.id = $1) AND edge.uri = $2;"#,
     node_id,
     edge_uri
   )
@@ -335,27 +335,27 @@ pub async fn get_related_by_from_node_id_and_edge_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE fn.id = $1 AND e.uri = $2;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE from_node.id = $1 AND edge.uri = $2;"#,
     from_node_id,
     edge_uri
   )
@@ -371,27 +371,27 @@ pub async fn get_related_by_to_node_id_and_edge_uri(
   sqlx::query_as!(
     NodeEdgeRow,
     r#"SELECT 
-        fn.id as from_node_id, 
-        fn.uri as from_node_uri,
-        fn.data as from_node_data,
-        fn.created_at as from_node_created_at,
-        fn.updated_at as from_node_updated_at,
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-        tn.id as to_node_id, 
-        tn.uri as to_node_uri,
-        tn.data as to_node_data,
-        tn.created_at as to_node_created_at,
-        tn.updated_at as to_node_updated_at,
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
         
-        e.id as edge_id, 
-        e.uri as edge_uri,
-        e.data as edge_data,
-        e.created_at as edge_created_at,
-        e.updated_at as edge_updated_at
-       FROM edges e
-       JOIN nodes fn ON fn.id = e.from_node_id
-       JOIN nodes tn ON tn.id = e.to_node_id
-       WHERE tn.id = $1 AND e.uri = $2;"#,
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id
+       WHERE to_node.id = $1 AND edge.uri = $2;"#,
     to_node_id,
     edge_uri
   )

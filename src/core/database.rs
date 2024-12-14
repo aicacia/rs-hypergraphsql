@@ -1,35 +1,23 @@
-use std::{future::Future, pin::Pin};
-
 pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!();
+
+pub async fn create_pool(filename: &str) -> sqlx::Result<sqlx::SqlitePool> {
+  let pool = sqlx::sqlite::SqlitePoolOptions::new()
+    .connect_with(
+      sqlx::sqlite::SqliteConnectOptions::new()
+        .filename(filename)
+        .create_if_missing(true)
+        .foreign_keys(true)
+        .synchronous(sqlx::sqlite::SqliteSynchronous::Normal)
+        .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
+    )
+    .await?;
+  MIGRATOR.run(&pool).await?;
+  Ok(pool)
+}
 
 pub async fn pragma(pool: &sqlx::SqlitePool) -> sqlx::Result<()> {
   sqlx::query("PRAGMA journal_mode = wal; PRAGMA synchronous = normal; PRAGMA foreign_keys = on;")
     .execute(pool)
     .await?;
   Ok(())
-}
-
-pub async fn run_transaction<T, F>(
-  pool: &sqlx::SqlitePool,
-  transaction_fn: F,
-) -> Result<T, sqlx::Error>
-where
-  F: for<'a> FnOnce(
-    &'a mut sqlx::Transaction<'_, sqlx::Sqlite>,
-  ) -> Pin<Box<dyn Send + Future<Output = sqlx::Result<T>> + 'a>>,
-{
-  let mut transaction = pool.begin().await?;
-  let result = match transaction_fn(&mut transaction).await {
-    Ok(result) => result,
-    Err(e) => match transaction.rollback().await {
-      Ok(_) => return Err(e),
-      Err(e2) => {
-        // TODO: replace with logger
-        println!("Failed to rollback transaction: {}", e2);
-        return Err(e);
-      }
-    },
-  };
-  transaction.commit().await?;
-  Ok(result)
 }

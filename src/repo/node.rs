@@ -8,15 +8,23 @@ pub struct NodeRow {
 }
 
 pub async fn get_node_by_id(pool: &sqlx::SqlitePool, id: i64) -> sqlx::Result<Option<NodeRow>> {
-  sqlx::query_as!(NodeRow, "SELECT n.* FROM nodes n WHERE n.id = $1;", id)
-    .fetch_optional(pool)
-    .await
+  sqlx::query_as!(
+    NodeRow,
+    "SELECT node.* FROM nodes node WHERE node.id = $1;",
+    id
+  )
+  .fetch_optional(pool)
+  .await
 }
 
 pub async fn get_nodes_by_uri(pool: &sqlx::SqlitePool, uri: &str) -> sqlx::Result<Vec<NodeRow>> {
-  sqlx::query_as!(NodeRow, "SELECT n.* FROM nodes n WHERE n.uri = $1;", uri)
-    .fetch_all(pool)
-    .await
+  sqlx::query_as!(
+    NodeRow,
+    "SELECT node.* FROM nodes node WHERE node.uri = $1;",
+    uri
+  )
+  .fetch_all(pool)
+  .await
 }
 
 pub async fn create_node(pool: &sqlx::SqlitePool, uri: &str, data: &str) -> sqlx::Result<NodeRow> {

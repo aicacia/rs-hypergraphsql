@@ -61,5 +61,14 @@ async fn main(pool: sqlx::SqlitePool) -> Result<(), sqlx::Error> {
 
   Ok(())
 }
+```
 
+```json
+{
+  "type": "node_edge",
+  "edge.uri": { "eq": "user" },
+  "from_node.data": {
+    "name": { "eq": "a" }
+  }
+}
 ```

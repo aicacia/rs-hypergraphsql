@@ -1,4 +1,5 @@
 use hypergraphsql::prelude::*;
+use query::Query;
 use serde::{Deserialize, Serialize};
 
 static NODE_USER_URI: &str = "user";
@@ -12,9 +13,12 @@ struct User {
   name: String,
 }
 
-#[sqlx::test(migrations = "./migrations")]
-async fn test_simple_graph(pool: sqlx::SqlitePool) -> sqlx::Result<()> {
-  pragma(&pool).await?;
+#[sqlx::test]
+async fn test_query() -> sqlx::Result<()> {
+  let temp_path = tempfile::NamedTempFile::new()?.into_temp_path();
+  let filename = temp_path.as_os_str().to_string_lossy();
+
+  let pool = create_pool(&filename).await?;
 
   let user_a = create_node(
     &pool,
@@ -35,12 +39,17 @@ async fn test_simple_graph(pool: sqlx::SqlitePool) -> sqlx::Result<()> {
 
   create_edge(&pool, &user_a, &user_b, EDGE_FOLLOWS_URI, None::<Follows>).await?;
 
-  let related = get_related_by_from_node_id_and_edge_uri::<User, User, Follows>(
-    &pool,
-    user_a.id,
-    EDGE_FOLLOWS_URI,
-  )
-  .await?;
+  let query_json = serde_json::json!({
+    "type": "node_edge",
+    "from_node.uri": {"eq": "user"},
+    "from_node.data": {
+      "name": {"eq": "a"}
+    }
+  });
+  let query = serde_json::from_value::<Query>(query_json).expect("Query failed to parse JSON");
+  println!("{}", query.query_builder().sql());
+  let related = query.node_edges::<User, User, Follows>(&pool).await?;
+
   assert_eq!(related.len(), 1);
   let node_edge = related.get(0).unwrap();
   let user_a = node_edge.from_node();

@@ -10,9 +10,13 @@ pub struct EdgeRow {
 }
 
 pub async fn get_edge_by_id(pool: &sqlx::SqlitePool, id: i64) -> sqlx::Result<Option<EdgeRow>> {
-  sqlx::query_as!(EdgeRow, "SELECT e.* FROM edges e WHERE e.id = $1;", id)
-    .fetch_optional(pool)
-    .await
+  sqlx::query_as!(
+    EdgeRow,
+    "SELECT edge.* FROM edges edge WHERE edge.id = $1;",
+    id
+  )
+  .fetch_optional(pool)
+  .await
 }
 
 pub async fn get_edges_by_from_node_id(
@@ -21,7 +25,7 @@ pub async fn get_edges_by_from_node_id(
 ) -> sqlx::Result<Vec<EdgeRow>> {
   sqlx::query_as!(
     EdgeRow,
-    "SELECT e.* FROM edges e WHERE e.from_node_id = $1;",
+    "SELECT edge.* FROM edges edge WHERE edge.from_node_id = $1;",
     from_node_id
   )
   .fetch_all(pool)
@@ -34,7 +38,7 @@ pub async fn get_edges_by_to_node_id(
 ) -> sqlx::Result<Vec<EdgeRow>> {
   sqlx::query_as!(
     EdgeRow,
-    "SELECT e.* FROM edges e WHERE e.to_node_id = $1;",
+    "SELECT edge.* FROM edges edge WHERE edge.to_node_id = $1;",
     to_node_id
   )
   .fetch_all(pool)

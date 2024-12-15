@@ -49,6 +49,19 @@ pub async fn create_edge<E, FromNode, ToNode>(
 where
   E: Serialize + DeserializeOwned,
 {
+  create_edge_with_ids(pool, from_node.id, to_node.id, uri, data).await
+}
+
+pub async fn create_edge_with_ids<E>(
+  pool: &sqlx::SqlitePool,
+  from_node_id: i64,
+  to_node_id: i64,
+  uri: &str,
+  data: Option<E>,
+) -> sqlx::Result<Edge<E>>
+where
+  E: Serialize + DeserializeOwned,
+{
   let data_json = if let Some(d) = &data {
     match serde_json::to_string(d) {
       Ok(json) => Some(json),
@@ -59,8 +72,8 @@ where
   };
   let row = repo::edge::create_edge(
     pool,
-    from_node.id,
-    to_node.id,
+    from_node_id,
+    to_node_id,
     uri,
     data_json.as_ref().map(String::as_ref),
   )

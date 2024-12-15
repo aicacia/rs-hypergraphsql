@@ -1,5 +1,4 @@
-use hypergraphsql::prelude::*;
-use query::Query;
+use hypergraphsql::*;
 use serde::{Deserialize, Serialize};
 
 static NODE_USER_URI: &str = "user";

@@ -34,6 +34,19 @@ pub async fn delete_edge(pool: &sqlx::SqlitePool, edge_id: i64) -> sqlx::Result<
     .await
 }
 
+pub async fn delete_edges(pool: &sqlx::SqlitePool, edge_ids: &[i64]) -> sqlx::Result<Vec<EdgeRow>> {
+  let ids = edge_ids
+    .into_iter()
+    .map(ToString::to_string)
+    .collect::<Vec<String>>()
+    .join(",");
+  sqlx::query_as(&format!(
+    "DELETE FROM edges WHERE id in ({ids}) RETURNING *;"
+  ))
+  .fetch_all(pool)
+  .await
+}
+
 pub async fn delete_edges_by_uri(pool: &sqlx::SqlitePool, uri: &str) -> sqlx::Result<Vec<EdgeRow>> {
   sqlx::query_as("DELETE FROM edges WHERE uri = $1 RETURNING *;")
     .bind(uri)

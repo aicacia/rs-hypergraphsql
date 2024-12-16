@@ -22,6 +22,19 @@ pub async fn delete_node(pool: &sqlx::SqlitePool, id: i64) -> sqlx::Result<Optio
     .await
 }
 
+pub async fn delete_nodes(pool: &sqlx::SqlitePool, node_ids: &[i64]) -> sqlx::Result<Vec<NodeRow>> {
+  let ids = node_ids
+    .into_iter()
+    .map(ToString::to_string)
+    .collect::<Vec<String>>()
+    .join(",");
+  sqlx::query_as(&format!(
+    "DELETE FROM nodes WHERE id in ({ids}) RETURNING *;"
+  ))
+  .fetch_all(pool)
+  .await
+}
+
 pub async fn delete_nodes_by_uri(pool: &sqlx::SqlitePool, uri: &str) -> sqlx::Result<Vec<NodeRow>> {
   sqlx::query_as("DELETE FROM nodes WHERE uri = $1 RETURNING *;")
     .bind(uri)

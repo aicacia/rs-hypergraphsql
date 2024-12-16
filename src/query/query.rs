@@ -7,56 +7,62 @@ use crate::{
   repo::{edge::EdgeRow, node::NodeRow, node_edge::NodeEdgeRow},
 };
 
-use super::builder::query_builder;
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(tag = "type")]
-pub enum Query {
-  #[serde(rename = "node")]
-  Node(HashMap<QueryField, QueryExpr>),
-  #[serde(rename = "edge")]
-  Edge(HashMap<QueryField, QueryExpr>),
-  #[serde(rename = "node_edge")]
-  NodeEdge(HashMap<QueryField, QueryExpr>),
-}
+pub struct Query(pub HashMap<QueryField, QueryExpr>);
 
 impl Query {
-  pub fn query_builder(&self) -> sqlx::QueryBuilder<'_, sqlx::Sqlite> {
-    query_builder::<sqlx::Sqlite>(self)
+  pub fn sql(&self) -> String {
+    query_condition_builder(sqlx::QueryBuilder::<'_, sqlx::Sqlite>::new(""), &self.0).into_sql()
   }
 
-  pub fn into_sql(&self) -> String {
-    self.query_builder().into_sql()
+  pub fn nodes_sql(&self) -> String {
+    query_condition_builder(
+      sqlx::QueryBuilder::<'_, sqlx::Sqlite>::new("SELECT node.* FROM nodes node"),
+      &self.0,
+    )
+    .into_sql()
   }
 
-  pub fn is_node_query(&self) -> bool {
-    match self {
-      Query::Node(_) => true,
-      _ => false,
-    }
+  pub fn edges_sql(&self) -> String {
+    query_condition_builder(
+      sqlx::QueryBuilder::<'_, sqlx::Sqlite>::new("SELECT edge.* FROM nodes edge"),
+      &self.0,
+    )
+    .into_sql()
   }
 
-  pub fn is_edge_query(&self) -> bool {
-    match self {
-      Query::Edge(_) => true,
-      _ => false,
-    }
-  }
+  pub fn node_edges_sql(&self) -> String {
+    query_condition_builder(
+      sqlx::QueryBuilder::<'_, sqlx::Sqlite>::new(
+        r#"SELECT 
+        from_node.id as from_node_id, 
+        from_node.uri as from_node_uri,
+        from_node.data as from_node_data,
+        from_node.created_at as from_node_created_at,
+        from_node.updated_at as from_node_updated_at,
 
-  pub fn is_node_edge_query(&self) -> bool {
-    match self {
-      Query::NodeEdge(_) => true,
-      _ => false,
-    }
+        to_node.id as to_node_id, 
+        to_node.uri as to_node_uri,
+        to_node.data as to_node_data,
+        to_node.created_at as to_node_created_at,
+        to_node.updated_at as to_node_updated_at,
+
+        edge.id as edge_id, 
+        edge.uri as edge_uri,
+        edge.data as edge_data,
+        edge.created_at as edge_created_at,
+        edge.updated_at as edge_updated_at
+       FROM edges edge
+       JOIN nodes from_node ON from_node.id = edge.from_node_id
+       JOIN nodes to_node ON to_node.id = edge.to_node_id"#,
+      ),
+      &self.0,
+    )
+    .into_sql()
   }
 
   pub async fn node_rows(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<NodeRow>> {
-    if self.is_node_query() {
-      return sqlx::query_as(query_builder::<sqlx::Sqlite>(self).sql())
-        .fetch_all(pool)
-        .await;
-    }
-    Err(sqlx::Error::Encode(Box::new(QueryError::InvalidQueryType)))
+    sqlx::query_as(&self.nodes_sql()).fetch_all(pool).await
   }
 
   pub async fn nodes<N>(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Node<N>>>
@@ -75,12 +81,7 @@ impl Query {
   }
 
   pub async fn edge_rows(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<EdgeRow>> {
-    if self.is_edge_query() {
-      return sqlx::query_as(query_builder::<sqlx::Sqlite>(self).sql())
-        .fetch_all(pool)
-        .await;
-    }
-    Err(sqlx::Error::Encode(Box::new(QueryError::InvalidQueryType)))
+    sqlx::query_as(&self.edges_sql()).fetch_all(pool).await
   }
 
   pub async fn edges<E>(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Edge<E>>>
@@ -99,12 +100,7 @@ impl Query {
   }
 
   pub async fn node_edge_rows(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<NodeEdgeRow>> {
-    if self.is_node_edge_query() {
-      return sqlx::query_as(query_builder::<sqlx::Sqlite>(self).sql())
-        .fetch_all(pool)
-        .await;
-    }
-    Err(sqlx::Error::Encode(Box::new(QueryError::InvalidQueryType)))
+    sqlx::query_as(&self.node_edges_sql()).fetch_all(pool).await
   }
 
   pub async fn node_edges<FN, TN, E>(
@@ -248,4 +244,120 @@ pub enum QueryOp {
   And(Vec<QueryExpr>),
   Or(Vec<QueryExpr>),
   Not(Box<QueryExpr>),
+}
+
+pub fn query_condition_builder<'args, DB: sqlx::Database>(
+  mut qb: sqlx::QueryBuilder<'args, DB>,
+  query: &HashMap<QueryField, QueryExpr>,
+) -> sqlx::QueryBuilder<'args, DB> {
+  for (i, (field, expr)) in query.into_iter().enumerate() {
+    if i == 0 {
+      qb.push(" WHERE ");
+    }
+    if i > 0 {
+      qb.push(" AND ");
+    }
+    qb = query_condition_builder_expr(qb, &field.to_string(), expr);
+  }
+  qb
+}
+
+fn query_condition_builder_expr<'args, DB: sqlx::Database>(
+  mut qb: sqlx::QueryBuilder<'args, DB>,
+  field: &str,
+  expr: &QueryExpr,
+) -> sqlx::QueryBuilder<'args, DB> {
+  match expr {
+    QueryExpr::Value(value) => {
+      qb.push(value.into_sql());
+    }
+    QueryExpr::Field(sub_field) => {
+      qb.push(sub_field.to_string());
+    }
+    QueryExpr::Data(data) => {
+      for (i, (data_field, sub_expr)) in data.into_iter().enumerate() {
+        if i > 0 {
+          qb.push(" AND ");
+        }
+        qb = query_condition_builder_expr(
+          qb,
+          &format!("json_extract({field},'$.{data_field}')"),
+          sub_expr,
+        );
+      }
+    }
+    QueryExpr::Op(op) => match op {
+      QueryOp::Eq(sub_expr) => {
+        qb.push(field);
+        qb.push(" = ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::Neq(sub_expr) => {
+        qb.push(field);
+        qb.push(" != ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::Gt(sub_expr) => {
+        qb.push(field);
+        qb.push(" > ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::Lt(sub_expr) => {
+        qb.push(field);
+        qb.push(" < ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::Gte(sub_expr) => {
+        qb.push(field);
+        qb.push(" >= ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::Lte(sub_expr) => {
+        qb.push(field);
+        qb.push(" <= ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::Like(sub_expr) => {
+        qb.push(field);
+        qb.push(" LIKE ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+      QueryOp::In(sub_exprs) => {
+        qb.push(field);
+        qb.push(" IN (");
+        for (i, sub_expr) in sub_exprs.into_iter().enumerate() {
+          if i > 0 {
+            qb.push(", ");
+          }
+          qb = query_condition_builder_expr(qb, field, sub_expr);
+        }
+        qb.push(")");
+      }
+      QueryOp::And(sub_exprs) => {
+        qb.push(" (");
+        for (i, sub_expr) in sub_exprs.into_iter().enumerate() {
+          if i > 0 {
+            qb.push(" AND ");
+          }
+          qb = query_condition_builder_expr(qb, field, sub_expr);
+        }
+        qb.push(")");
+      }
+      QueryOp::Or(sub_exprs) => {
+        qb.push(" (");
+        for (i, sub_expr) in sub_exprs.into_iter().enumerate() {
+          if i > 0 {
+            qb.push(" OR ");
+          }
+          qb = query_condition_builder_expr(qb, field, sub_expr);
+        }
+        qb.push(")");
+      }
+      QueryOp::Not(sub_expr) => {
+        qb.push(" NOT ");
+        qb = query_condition_builder_expr(qb, field, &*sub_expr);
+      }
+    },
+  }
+  qb
 }

@@ -46,3 +46,54 @@ where
     created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
   })
 }
+
+pub async fn delete_node<T>(pool: &sqlx::SqlitePool, node_id: i64) -> sqlx::Result<Option<Node<T>>>
+where
+  T: Serialize + DeserializeOwned,
+{
+  let node = repo::node::delete_node(pool, node_id).await?;
+  if let Some(row) = node {
+    match Node::try_from(row) {
+      Ok(node) => Ok(Some(node)),
+      Err(e) => Err(sqlx::Error::Decode(Box::new(e))),
+    }
+  } else {
+    Ok(None)
+  }
+}
+
+pub async fn delete_nodes<E>(
+  pool: &sqlx::SqlitePool,
+  node_ids: &[i64],
+) -> sqlx::Result<Vec<Node<E>>>
+where
+  E: Serialize + DeserializeOwned,
+{
+  let rows: Vec<NodeRow> = repo::node::delete_nodes(pool, node_ids).await?;
+  let mut nodes = Vec::with_capacity(rows.len());
+  for row in rows {
+    match Node::try_from(row) {
+      Ok(node) => nodes.push(node),
+      Err(e) => return Err(sqlx::Error::Decode(Box::new(e))),
+    }
+  }
+  Ok(nodes)
+}
+
+pub async fn delete_nodes_by_uri<T>(
+  pool: &sqlx::SqlitePool,
+  uri: &str,
+) -> sqlx::Result<Vec<Node<T>>>
+where
+  T: Serialize + DeserializeOwned,
+{
+  let rows: Vec<NodeRow> = repo::node::delete_nodes_by_uri(pool, uri).await?;
+  let mut nodes = Vec::with_capacity(rows.len());
+  for row in rows {
+    match Node::try_from(row) {
+      Ok(node) => nodes.push(node),
+      Err(e) => return Err(sqlx::Error::Decode(Box::new(e))),
+    }
+  }
+  Ok(nodes)
+}

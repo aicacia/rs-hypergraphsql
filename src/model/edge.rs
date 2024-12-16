@@ -88,3 +88,54 @@ where
     created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
   })
 }
+
+pub async fn delete_edge<E>(pool: &sqlx::SqlitePool, edge_id: i64) -> sqlx::Result<Option<Edge<E>>>
+where
+  E: Serialize + DeserializeOwned,
+{
+  let edge = repo::edge::delete_edge(pool, edge_id).await?;
+  if let Some(row) = edge {
+    match Edge::try_from(row) {
+      Ok(edge) => Ok(Some(edge)),
+      Err(e) => Err(sqlx::Error::Decode(Box::new(e))),
+    }
+  } else {
+    Ok(None)
+  }
+}
+
+pub async fn delete_edges<E>(
+  pool: &sqlx::SqlitePool,
+  edge_ids: &[i64],
+) -> sqlx::Result<Vec<Edge<E>>>
+where
+  E: Serialize + DeserializeOwned,
+{
+  let rows: Vec<EdgeRow> = repo::edge::delete_edges(pool, edge_ids).await?;
+  let mut edges = Vec::with_capacity(rows.len());
+  for row in rows {
+    match Edge::try_from(row) {
+      Ok(edge) => edges.push(edge),
+      Err(e) => return Err(sqlx::Error::Decode(Box::new(e))),
+    }
+  }
+  Ok(edges)
+}
+
+pub async fn delete_edges_by_uri<E>(
+  pool: &sqlx::SqlitePool,
+  uri: &str,
+) -> sqlx::Result<Vec<Edge<E>>>
+where
+  E: Serialize + DeserializeOwned,
+{
+  let rows: Vec<EdgeRow> = repo::edge::delete_edges_by_uri(pool, uri).await?;
+  let mut edges = Vec::with_capacity(rows.len());
+  for row in rows {
+    match Edge::try_from(row) {
+      Ok(edge) => edges.push(edge),
+      Err(e) => return Err(sqlx::Error::Decode(Box::new(e))),
+    }
+  }
+  Ok(edges)
+}

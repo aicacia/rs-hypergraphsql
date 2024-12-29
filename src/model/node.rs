@@ -31,13 +31,31 @@ where
 
 pub async fn create_node<T>(pool: &sqlx::SqlitePool, uri: &str, data: T) -> sqlx::Result<Node<T>>
 where
-  T: Serialize + DeserializeOwned,
+  T: Serialize,
 {
   let data_json = match serde_json::to_string(&data) {
     Ok(json) => json,
     Err(e) => return Err(sqlx::Error::Encode(Box::new(e))),
   };
   let row = repo::node::create_node(pool, uri, &data_json).await?;
+  Ok(Node {
+    id: row.id,
+    uri: row.uri,
+    data,
+    updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+    created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
+  })
+}
+
+pub async fn update_node<T>(pool: &sqlx::SqlitePool, node_id: i64, data: T) -> sqlx::Result<Node<T>>
+where
+  T: Serialize,
+{
+  let data_json = match serde_json::to_string(&data) {
+    Ok(json) => json,
+    Err(e) => return Err(sqlx::Error::Encode(Box::new(e))),
+  };
+  let row = repo::node::update_node(pool, node_id, &data_json).await?;
   Ok(Node {
     id: row.id,
     uri: row.uri,

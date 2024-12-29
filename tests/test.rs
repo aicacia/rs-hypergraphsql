@@ -27,8 +27,10 @@ impl User {
 
 #[tokio::test]
 async fn test_query() -> sqlx::Result<()> {
-  let temp_path = tempfile::NamedTempFile::new()?.into_temp_path();
+  let temp_path = tempfile::NamedTempFile::with_suffix("-test.db")?.into_temp_path();
   let filename = temp_path.as_os_str().to_string_lossy();
+
+  println!("filename: {}", filename);
 
   let pool = create_pool(&filename, false).await?;
 
@@ -44,7 +46,7 @@ async fn test_query() -> sqlx::Result<()> {
     }
   });
   let query = serde_json::from_value::<Query>(query_json).expect("failed to parse Query JSON");
-  log::info!("{}", query.sql());
+  println!("{}", query.sql());
   let related = query.node_edges::<User, User, Follows>(&pool).await?;
 
   assert_eq!(related.len(), 1);

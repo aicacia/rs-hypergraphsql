@@ -12,8 +12,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: DATABASE_URL=sqlite:hypergraphsql-test.db
 
     steps:
       - uses: actions/checkout@v4

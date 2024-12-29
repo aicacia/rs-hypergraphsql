@@ -27,6 +27,18 @@ pub async fn create_edge(
   .await
 }
 
+pub async fn update_edge(
+  pool: &sqlx::SqlitePool,
+  edge_id: i64,
+  data: Option<&str>,
+) -> sqlx::Result<EdgeRow> {
+  sqlx::query_as("UPDATE edges SET data = $1 WHERE id = $2 RETURNING *;")
+    .bind(data)
+    .bind(edge_id)
+    .fetch_one(pool)
+    .await
+}
+
 pub async fn delete_edge(pool: &sqlx::SqlitePool, edge_id: i64) -> sqlx::Result<Option<EdgeRow>> {
   sqlx::query_as("DELETE FROM edges WHERE id = $1 RETURNING *;")
     .bind(edge_id)

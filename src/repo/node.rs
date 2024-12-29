@@ -15,6 +15,18 @@ pub async fn create_node(pool: &sqlx::SqlitePool, uri: &str, data: &str) -> sqlx
     .await
 }
 
+pub async fn update_node(
+  pool: &sqlx::SqlitePool,
+  node_id: i64,
+  data: &str,
+) -> sqlx::Result<NodeRow> {
+  sqlx::query_as("UPDATE nodes SET data = $1 WHERE id = $2 RETURNING *;")
+    .bind(data)
+    .bind(node_id)
+    .fetch_one(pool)
+    .await
+}
+
 pub async fn delete_node(pool: &sqlx::SqlitePool, id: i64) -> sqlx::Result<Option<NodeRow>> {
   sqlx::query_as("DELETE FROM nodes WHERE id = $1 RETURNING *;")
     .bind(id)

@@ -26,7 +26,10 @@ sqlx = { version = "0.8", default-features = false, features = [
   "sqlite",
   "runtime-tokio",
 ] }
-tokio = { version = "1.41", default-features = false, features = ["rt"] }
+tokio = { version = "1.41", default-features = false, features = [
+  "rt",
+  "macros",
+] }
 log = "0.4"
 
 [dev-dependencies]
@@ -42,10 +45,3 @@ opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 3
-
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = "z"
-panic = "abort"
-strip = true

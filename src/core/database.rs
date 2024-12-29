@@ -1,11 +1,14 @@
 pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!();
 
-pub async fn create_pool(filename: &str) -> sqlx::Result<sqlx::SqlitePool> {
+pub async fn create_pool(
+  filename: &str,
+  create_if_missing: bool,
+) -> sqlx::Result<sqlx::SqlitePool> {
   let pool = sqlx::sqlite::SqlitePoolOptions::new()
     .connect_with(
       sqlx::sqlite::SqliteConnectOptions::new()
         .filename(filename)
-        .create_if_missing(true)
+        .create_if_missing(create_if_missing)
         .foreign_keys(true)
         .synchronous(sqlx::sqlite::SqliteSynchronous::Normal)
         .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),

@@ -20,10 +20,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: true
-      - run: cargo install sqlx-cli --no-default-features --features native-tls,sqlite
-      - run: sqlx database create
-      - run: sqlx migrate run
-      - name: Build
-        run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose

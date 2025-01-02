@@ -7,23 +7,9 @@ use super::{edge::Edge, node::Node};
 
 #[derive(Serialize, Deserialize)]
 pub struct NodeEdge<FN, TN, E> {
-  from_node: Node<FN>,
-  to_node: Node<TN>,
-  edge: Edge<E>,
-}
-
-impl<FN, TN, E> NodeEdge<FN, TN, E> {
-  pub fn from_node(&self) -> &Node<FN> {
-    &self.from_node
-  }
-
-  pub fn to_node(&self) -> &Node<TN> {
-    &self.to_node
-  }
-
-  pub fn to_edge(&self) -> &Edge<E> {
-    &self.edge
-  }
+  pub from_node: Node<FN>,
+  pub to_node: Node<TN>,
+  pub edge: Edge<E>,
 }
 
 impl<FN, TN, E> TryFrom<NodeEdgeRow> for NodeEdge<FN, TN, E>

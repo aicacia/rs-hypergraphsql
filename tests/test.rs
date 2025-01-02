@@ -51,10 +51,8 @@ async fn test_query() -> sqlx::Result<()> {
 
   assert_eq!(related.len(), 1);
   let node_edge = related.get(0).unwrap();
-  let user_a = node_edge.from_node();
-  let user_b = node_edge.to_node();
-  assert_eq!(user_a.data.info.name, "a");
-  assert_eq!(user_b.data.info.name, "b");
+  assert_eq!(node_edge.from_node.data.info.name, "a");
+  assert_eq!(node_edge.to_node.data.info.name, "b");
 
   let deleted = delete_nodes::<User>(&pool, &vec![user_a.id, user_b.id]).await?;
   assert_eq!(deleted.len(), 2);

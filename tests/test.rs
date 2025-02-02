@@ -32,7 +32,7 @@ async fn test_query() -> sqlx::Result<()> {
 
   println!("filename: {}", filename);
 
-  let pool = create_pool(&filename, false).await?;
+  let pool = create(&filename, false).await?;
 
   let user_a = create_node(&pool, NODE_USER_URI, User::new("a")).await?;
   let user_b = create_node(&pool, NODE_USER_URI, User::new("b")).await?;

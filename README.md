@@ -6,7 +6,7 @@
 a hypergraph in sqlite
 
 ```rust
-use hypergraphsql::prelude::*;
+use hypergraphsql::*;
 use serde::{Deserialize, Serialize};
 
 static NODE_USER_URI: &str = "user";
@@ -16,52 +16,55 @@ static EDGE_FOLLOWS_URI: &str = "follows";
 struct Follows;
 
 #[derive(Serialize, Deserialize)]
-struct User {
+struct UserInfo {
   name: String,
 }
 
-#[tokio::main]
-async fn main(pool: sqlx::SqlitePool) -> Result<(), sqlx::Error> {
-  // run migrations if not already run
-  MIGRATOR.run(&pool).await?;
-  // sets sqlite to WAL mode, enables foreign keys, and sets synchronous to normal
-  pragma(&pool).await?;
+#[derive(Serialize, Deserialize)]
+struct User {
+  info: UserInfo,
+}
 
-  let user_a = create_node(
-    &pool,
-    NODE_USER_URI,
+impl User {
+  fn new(name: impl Into<String>) -> Self {
     User {
-      name: "a".to_string(),
-    },
-  )
-  .await?;
-  let user_b = create_node(
-    &pool,
-    NODE_USER_URI,
-    User {
-      name: "b".to_string(),
-    },
-  )
-  .await?;
+      info: UserInfo { name: name.into() },
+    }
+  }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), sqlx::Error> {
+  let pool = create("hypergraphsql.db", false).await?;
+
+  let user_a = create_node(&pool, NODE_USER_URI, User::new("a")).await?;
+  let user_b = create_node(&pool, NODE_USER_URI, User::new("b")).await?;
 
   create_edge(&pool, &user_a, &user_b, EDGE_FOLLOWS_URI, None::<Follows>).await?;
 
-  let related = get_related_by_from_node_id_and_edge_uri::<User, User, Follows>(
-    &pool,
-    user_a.id,
-    EDGE_FOLLOWS_URI,
-  )
-  .await?;
+  let query_json = serde_json::json!({
+    "from_node.uri": {"eq": "user"},
+    "from_node.data": {
+      "info.name": {"eq": "a"}
+    }
+  });
+  let query = serde_json::from_value::<Query>(query_json).expect("failed to parse Query JSON");
+  println!("{}", query.sql());
+  let related = query.node_edges::<User, User, Follows>(&pool).await?;
+
   assert_eq!(related.len(), 1);
   let node_edge = related.get(0).unwrap();
-  let user_a = node_edge.from_node();
-  let user_b = node_edge.to_node();
-  assert_eq!(user_a.data.name, "a");
-  assert_eq!(user_b.data.name, "b");
+  assert_eq!(node_edge.from_node.data.info.name, "a");
+  assert_eq!(node_edge.to_node.data.info.name, "b");
+
+  let deleted = delete_nodes::<User>(&pool, &vec![user_a.id, user_b.id]).await?;
+  assert_eq!(deleted.len(), 2);
 
   Ok(())
 }
 ```
+
+### Query Example
 
 ```json
 {

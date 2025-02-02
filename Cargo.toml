@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 name = "hypergraphsql"
 repository = "https://github.com/aicacia/rs-hypergraphsql"
-rust-version = "1.82"
+rust-version = "1.56"
 version = "0.1.0"
 
 [lib]
@@ -26,13 +26,13 @@ sqlx = { version = "0.8", default-features = false, features = [
   "sqlite",
   "runtime-tokio",
 ] }
-tokio = { version = "1.41", default-features = false, features = [
+tokio = { version = "1.43", default-features = false, features = [
   "rt",
   "macros",
 ] }
 
 [dev-dependencies]
-tempfile = "3.14"
+tempfile = "3.16"
 
 [features]
 default = ["std"]
@@ -48,6 +48,6 @@ opt-level = 3
 [profile.release]
 panic = "abort"
 codegen-units = 1
-lto = true
+lto = "thin"
 incremental = false
-opt-level = "s"
+opt-level = "z"

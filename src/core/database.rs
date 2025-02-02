@@ -1,9 +1,6 @@
 pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!();
 
-pub async fn create_pool(
-  filename: &str,
-  create_if_missing: bool,
-) -> sqlx::Result<sqlx::SqlitePool> {
+pub async fn create(filename: &str, create_if_missing: bool) -> sqlx::Result<sqlx::SqlitePool> {
   let pool = sqlx::sqlite::SqlitePoolOptions::new()
     .connect_with(
       sqlx::sqlite::SqliteConnectOptions::new()
@@ -18,9 +15,14 @@ pub async fn create_pool(
   Ok(pool)
 }
 
-pub async fn pragma(pool: &sqlx::SqlitePool) -> sqlx::Result<()> {
+pub async fn pragma<'e, E, DB>(executor: E) -> sqlx::Result<()>
+where
+  DB: sqlx::Database,
+  <DB as sqlx::Database>::Arguments<'e>: sqlx::IntoArguments<'e, DB>,
+  E: sqlx::Executor<'e, Database = DB>,
+{
   sqlx::query("PRAGMA journal_mode = wal; PRAGMA synchronous = normal; PRAGMA foreign_keys = on;")
-    .execute(pool)
+    .execute(executor)
     .await?;
   Ok(())
 }
